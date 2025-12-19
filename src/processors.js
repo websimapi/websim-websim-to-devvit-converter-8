@@ -24,6 +24,13 @@ export class AssetAnalyzer {
         if (!source || typeof source !== 'string') return source;
         if (source.startsWith('.') || source.startsWith('/') || source.startsWith('data:') || source.startsWith('blob:')) return source;
 
+        // 0. React Runtime Handling (Fix for prod builds)
+        // Maps dev runtime to production runtime to prevent "jsxDEV is not a function" errors
+        if (source === 'react/jsx-dev-runtime') {
+            this.dependencies['react'] = '^18.2.0';
+            return 'react/jsx-runtime';
+        }
+
         // 1. Remotion Handling
         if (source.includes('@websim/remotion')) {
             const isPlayer = source.includes('/player');
@@ -64,6 +71,12 @@ export class AssetAnalyzer {
         if (source.toLowerCase().includes('pixi')) {
             this.dependencies['pixi.js'] = '^7.0.0';
             return 'pixi.js';
+        }
+        
+        // 3.5 React CDN Runtime Fix (Catch deep imports from CDN)
+        if (source.includes('react') && (source.includes('jsx-dev-runtime') || source.includes('jsx-runtime'))) {
+             this.dependencies['react'] = '^18.2.0';
+             return 'react/jsx-runtime';
         }
 
         // 4. Generic esm.sh / unpkg Handling

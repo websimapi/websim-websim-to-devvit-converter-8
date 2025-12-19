@@ -40,10 +40,15 @@ ${hasReact ? "import react from '@vitejs/plugin-react';" : ""}
 export default defineConfig({
   root: 'client',
   base: './',
-  ${hasReact ? "plugins: [react()],": ""}
+  ${hasReact ? `plugins: [
+    react({
+      jsxRuntime: "automatic",
+      include: "**/*.{jsx,tsx,js,ts}",
+    }),
+  ],` : ""}
   assetsInclude: ['**/*.mp3', '**/*.wav', '**/*.ogg', '**/*.glb', '**/*.gltf', '**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif'],
   ${hasReact ? `optimizeDeps: {
-    include: ["remotion", "@remotion/player", "react", "react-dom"],
+    include: ["remotion", "react", "react-dom"],
   },` : ""}
   build: {
     outDir: '../webroot',
@@ -51,16 +56,14 @@ export default defineConfig({
     target: 'es2020',
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            if (id.includes('three')) return 'vendor_three';
-            if (id.includes('react')) return 'vendor_react';
-            if (id.includes('remotion')) return 'vendor_remotion';
-            return 'vendor';
-          }
-        }
-      }
-    }
+        entryFileNames: "[name].js",
+        chunkFileNames: "[name].js",
+        assetFileNames: "[name][extname]",
+      },
+    },
+  },
+  define: {
+    'process.env.NODE_ENV': '"production"',
   }
 });
 `;
