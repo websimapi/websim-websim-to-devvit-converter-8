@@ -34,43 +34,21 @@ webroot: webroot
 
 export const generateViteConfig = ({ hasReact = false, hasRemotion = false } = {}) => `
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
-${hasReact ? "import react from '@vitejs/plugin-react';" : ""}
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   mode: 'production',
   root: 'client',
   base: './',
-  ${hasReact ? `plugins: [
-    react({
-      jsxRuntime: 'automatic',
-      jsxImportSource: 'react',
-      babel: {
-        compact: true,
-        presets: [
-          ['@babel/preset-react', { 
-            runtime: 'automatic', 
-            development: false,
-            importSource: 'react'
-          }]
-        ]
-      }
-    }),
-  ],` : ""}
+  plugins: [
+    ${hasReact ? 'react(),' : ''}
+  ],
   assetsInclude: ['**/*.mp3', '**/*.wav', '**/*.ogg', '**/*.glb', '**/*.gltf', '**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif'],
-  ${hasReact ? `optimizeDeps: {
-    include: [${hasRemotion ? '"remotion", "@remotion/player", ' : ''}"react", "react-dom", "react/jsx-runtime"],
-    esbuildOptions: {
-      define: {
-        'process.env.NODE_ENV': '"production"'
-      }
-    }
-  },` : ""}
   build: {
     outDir: '../webroot',
     emptyOutDir: true,
     target: 'es2020',
-    minify: 'terser',
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         entryFileNames: "[name].js",
@@ -81,6 +59,7 @@ export default defineConfig({
   },
   define: {
     "process.env.NODE_ENV": JSON.stringify("production"),
+    "process.platform": JSON.stringify("browser"),
   }
 });
 `;

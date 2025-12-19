@@ -66,10 +66,16 @@ export class AssetAnalyzer {
             return 'pixi.js';
         }
         
-        // 3.5 React CDN Runtime Fix (Catch deep imports from CDN)
-        if (source.includes('react') && (source.includes('jsx-dev-runtime') || source.includes('jsx-runtime'))) {
-             this.dependencies['react'] = '^18.2.0';
-             return 'react/jsx-runtime';
+        // 3.5 React CDN Runtime Fix
+        if (source.includes('react')) {
+             if (source.includes('jsx-dev-runtime')) {
+                 this.dependencies['react'] = '^18.2.0';
+                 return 'react/jsx-dev-runtime';
+             }
+             if (source.includes('jsx-runtime')) {
+                 this.dependencies['react'] = '^18.2.0';
+                 return 'react/jsx-runtime';
+             }
         }
 
         // 4. Generic esm.sh / unpkg Handling
