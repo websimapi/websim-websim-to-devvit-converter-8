@@ -32,7 +32,7 @@ version: 0.1.0
 webroot: webroot
 `;
 
-export const generateViteConfig = (hasReact = false) => `
+export const generateViteConfig = ({ hasReact = false, hasRemotion = false } = {}) => `
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 ${hasReact ? "import react from '@vitejs/plugin-react';" : ""}
@@ -48,7 +48,7 @@ export default defineConfig({
   ],` : ""}
   assetsInclude: ['**/*.mp3', '**/*.wav', '**/*.ogg', '**/*.glb', '**/*.gltf', '**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif'],
   ${hasReact ? `optimizeDeps: {
-    include: ["remotion", "react", "react-dom"],
+    include: [${hasRemotion ? '"remotion", ' : ''}"react", "react-dom"],
   },` : ""}
   build: {
     outDir: '../webroot',

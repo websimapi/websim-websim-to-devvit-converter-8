@@ -74,14 +74,16 @@ export async function generateDevvitZip(projectMeta, assets, includeReadme = tru
     
     // Configure Vite for React/Remotion if detected
     const hasRemotion = !!analyzer.dependencies['remotion'];
+    const hasReact = hasRemotion || !!analyzer.dependencies['react'];
+
     const extraDevDeps = {};
-    if (hasRemotion) {
+    if (hasReact) {
         extraDevDeps['@vitejs/plugin-react'] = '^4.2.0';
     }
 
     zip.file("package.json", generatePackageJson(projectSlug, analyzer.dependencies, extraDevDeps));
     zip.file("devvit.yaml", generateDevvitYaml(projectSlug));
-    zip.file("vite.config.js", generateViteConfig(hasRemotion));
+    zip.file("vite.config.js", generateViteConfig({ hasReact, hasRemotion }));
     zip.file("tsconfig.json", tsConfig);
     zip.file(".gitignore", "node_modules\n.devvit\nwebroot/assets"); // Ignore build artifacts if needed
 

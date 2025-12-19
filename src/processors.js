@@ -24,13 +24,6 @@ export class AssetAnalyzer {
         if (!source || typeof source !== 'string') return source;
         if (source.startsWith('.') || source.startsWith('/') || source.startsWith('data:') || source.startsWith('blob:')) return source;
 
-        // 0. React Runtime Handling (Fix for prod builds)
-        // Maps dev runtime to production runtime to prevent "jsxDEV is not a function" errors
-        if (source === 'react/jsx-dev-runtime') {
-            this.dependencies['react'] = '^18.2.0';
-            return 'react/jsx-runtime';
-        }
-
         // 1. Remotion Handling
         if (source.includes('@websim/remotion')) {
             const isPlayer = source.includes('/player');
@@ -80,12 +73,14 @@ export class AssetAnalyzer {
         }
 
         // 4. Generic esm.sh / unpkg Handling
-        // Capture package name and optional version
+        // Capture package name, optional version, AND subpath
         // Updated to handle scoped packages correctly (e.g. @remotion/player)
-        const pkgMatch = source.match(/(?:esm\.sh|unpkg\.com|jsdelivr\.net)\/(?:npm\/)?((?:@[^/@]+\/)?[^/@]+)(?:@([^/?]+))?/);
+        const pkgMatch = source.match(/(?:esm\.sh|unpkg\.com|jsdelivr\.net)\/(?:npm\/)?((?:@[^/@]+\/)?[^/@]+)(?:@([^/?]+))?(\/[^?]*)?/);
         if (pkgMatch) {
             const pkg = pkgMatch[1];
             const ver = pkgMatch[2];
+            const path = pkgMatch[3] || '';
+
             // Filter out common non-packages or mistakes
             if (pkg !== 'gh' && pkg !== 'npm') {
                 // Update dependency if new or more specific than 'latest'
@@ -93,7 +88,8 @@ export class AssetAnalyzer {
                 if (!current || (current === 'latest' && ver)) {
                     this.dependencies[pkg] = ver ? `^${ver}` : 'latest';
                 }
-                return pkg;
+                // Return package + subpath (e.g. react/jsx-dev-runtime)
+                return pkg + path;
             }
         }
 
