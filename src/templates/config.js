@@ -43,6 +43,7 @@ export default defineConfig({
   plugins: [
     ${hasReact ? `react({
       jsxRuntime: 'automatic',
+      jsxImportSource: 'react',
       include: "**/*.{jsx,tsx,js,ts}",
       babel: {
         babelrc: false,
@@ -51,6 +52,12 @@ export default defineConfig({
       }
     }),` : ''}
   ],
+  resolve: {
+    alias: {
+      'react/jsx-dev-runtime': 'react/jsx-runtime',
+      'react/jsx-runtime': 'react/jsx-runtime',
+    },
+  },
   assetsInclude: ['**/*.mp3', '**/*.wav', '**/*.ogg', '**/*.glb', '**/*.gltf', '**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif'],
   build: {
     outDir: '../webroot',
