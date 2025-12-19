@@ -38,22 +38,39 @@ import { resolve } from 'path';
 ${hasReact ? "import react from '@vitejs/plugin-react';" : ""}
 
 export default defineConfig({
+  mode: 'production',
   root: 'client',
   base: './',
   ${hasReact ? `plugins: [
     react({
       jsxRuntime: 'automatic',
-      include: "**/*.{jsx,tsx,js,ts}",
+      jsxImportSource: 'react',
+      babel: {
+        compact: true,
+        presets: [
+          ['@babel/preset-react', { 
+            runtime: 'automatic', 
+            development: false,
+            importSource: 'react'
+          }]
+        ]
+      }
     }),
   ],` : ""}
   assetsInclude: ['**/*.mp3', '**/*.wav', '**/*.ogg', '**/*.glb', '**/*.gltf', '**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif'],
   ${hasReact ? `optimizeDeps: {
-    include: [${hasRemotion ? '"remotion", "@remotion/player", ' : ''}"react", "react-dom"],
+    include: [${hasRemotion ? '"remotion", "@remotion/player", ' : ''}"react", "react-dom", "react/jsx-runtime"],
+    esbuildOptions: {
+      define: {
+        'process.env.NODE_ENV': '"production"'
+      }
+    }
   },` : ""}
   build: {
     outDir: '../webroot',
     emptyOutDir: true,
     target: 'es2020',
+    minify: 'terser',
     rollupOptions: {
       output: {
         entryFileNames: "[name].js",
