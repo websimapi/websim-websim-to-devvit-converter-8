@@ -13,6 +13,7 @@ import {
     simpleLoggerJs,
     websimSocketPolyfill,
     websimStubsJs,
+    jsxDevProxy,
     validateScript,
     setupScript,
     generateReadme
@@ -117,6 +118,7 @@ export async function generateDevvitZip(projectMeta, assets, includeReadme = tru
     clientFolder.file("logger.js", simpleLoggerJs);
     clientFolder.file("websim_socket.js", websimSocketPolyfill);
     clientFolder.file("websim_stubs.js", websimStubsJs);
+    clientFolder.file("jsx-dev-proxy.js", jsxDevProxy);
 
     // Add Remotion Bridge if needed
     if (hasRemotion) {

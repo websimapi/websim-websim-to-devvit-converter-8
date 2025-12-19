@@ -68,14 +68,11 @@ export class AssetAnalyzer {
         
         // 3.5 React CDN Runtime Fix
         if (source.includes('react')) {
-             if (source.includes('jsx-dev-runtime')) {
+             if (source.includes('jsx-dev-runtime') || source.includes('jsx-runtime')) {
                  this.dependencies['react'] = '^18.2.0';
-                 // CRITICAL: Force production runtime in conversion to avoid Vite dev/prod mismatch
-                 return 'react/jsx-runtime';
-             }
-             if (source.includes('jsx-runtime')) {
-                 this.dependencies['react'] = '^18.2.0';
-                 return 'react/jsx-runtime';
+                 // We preserve the dev-runtime import path so our Vite alias can intercept it with a proxy
+                 // Rewriting to jsx-runtime directly breaks code expecting jsxDEV export
+                 return source.includes('jsx-dev-runtime') ? 'react/jsx-dev-runtime' : 'react/jsx-runtime';
              }
         }
 

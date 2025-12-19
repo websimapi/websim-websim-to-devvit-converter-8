@@ -56,8 +56,8 @@ export default defineConfig({
   resolve: {
     alias: {
       // CRITICAL: Remotion and some React libs might try to import jsx-dev-runtime in 'dev' mode.
-      // We force everything to the production runtime to avoid "jsxDEV is not a function" errors.
-      'react/jsx-dev-runtime': 'react/jsx-runtime',
+      // We alias to a local proxy that implements jsxDEV using the production jsx runtime.
+      'react/jsx-dev-runtime': '/jsx-dev-proxy.js',
       'react/jsx-runtime': 'react/jsx-runtime',
       'remotion': 'remotion' 
     },
