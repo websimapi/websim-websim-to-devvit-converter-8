@@ -79,6 +79,9 @@ export async function generateDevvitZip(projectMeta, assets, includeReadme = tru
     const extraDevDeps = {};
     if (hasReact) {
         extraDevDeps['@vitejs/plugin-react'] = '^4.2.0';
+        // Explicitly needed because we define custom babel config in vite.config.js
+        extraDevDeps['@babel/core'] = '^7.23.0';
+        extraDevDeps['@babel/preset-react'] = '^7.23.0';
     }
 
     zip.file("package.json", generatePackageJson(projectSlug, analyzer.dependencies, extraDevDeps));

@@ -163,6 +163,7 @@ try {
     execSync('npm install', { stdio: 'inherit' });
 } catch(e) {
     console.warn('⚠️ npm install had some issues, but continuing...');
+    console.warn('   If the build fails, try running "npm install" manually.');
 }
 
 // 3. Build Client (Vite)
