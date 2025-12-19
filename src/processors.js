@@ -70,7 +70,8 @@ export class AssetAnalyzer {
         if (source.includes('react')) {
              if (source.includes('jsx-dev-runtime')) {
                  this.dependencies['react'] = '^18.2.0';
-                 return 'react/jsx-dev-runtime';
+                 // CRITICAL: Force production runtime in conversion to avoid Vite dev/prod mismatch
+                 return 'react/jsx-runtime';
              }
              if (source.includes('jsx-runtime')) {
                  this.dependencies['react'] = '^18.2.0';

@@ -42,7 +42,8 @@ export default defineConfig({
   base: './',
   plugins: [
     ${hasReact ? `react({
-      jsxRuntime: 'automatic',
+      jsxRuntime: 'automatic', 
+      // Force production runtime even if code tries to import dev
       jsxImportSource: 'react',
       include: "**/*.{jsx,tsx,js,ts}",
       babel: {
@@ -54,27 +55,40 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      // CRITICAL: Remotion and some React libs might try to import jsx-dev-runtime in 'dev' mode.
+      // We force everything to the production runtime to avoid "jsxDEV is not a function" errors.
       'react/jsx-dev-runtime': 'react/jsx-runtime',
       'react/jsx-runtime': 'react/jsx-runtime',
+      'remotion': 'remotion' 
     },
+    // Ensure we prioritize browser builds
+    mainFields: ['browser', 'module', 'main'],
   },
   assetsInclude: ['**/*.mp3', '**/*.wav', '**/*.ogg', '**/*.glb', '**/*.gltf', '**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif'],
   build: {
     outDir: '../webroot',
     emptyOutDir: true,
     target: 'es2020',
-    minify: 'esbuild',
+    minify: 'esbuild', // standard minification
     rollupOptions: {
       output: {
         entryFileNames: "[name].js",
         chunkFileNames: "[name].js",
         assetFileNames: "[name][extname]",
       },
+      // Ensure React is treated as a singleton
+      external: [], 
     },
   },
   define: {
+    // Hardcode production environment to prevent libs from taking dev paths
     "process.env.NODE_ENV": JSON.stringify("production"),
     "process.platform": JSON.stringify("browser"),
+    // Remotion specific flags if needed
+    "process.env.REMOTION_ENV": JSON.stringify("production"),
+  },
+  optimizeDeps: {
+    include: [${hasReact ? "'react', 'react-dom', 'react/jsx-runtime'" : ""}, ${hasRemotion ? "'remotion', '@remotion/player'" : ""}]
   }
 });
 `;

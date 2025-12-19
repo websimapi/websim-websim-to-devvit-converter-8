@@ -91,103 +91,115 @@ export const simpleLoggerJs = `
 `;
 
 export const websimSocketPolyfill = `
-(function() {
-    // Polyfill for WebsimSocket using Devvit Realtime Bridge
-    // This allows existing WebSim games to work by proxying events through the Devvit Host.
-    
-    console.log('[WebSim Socket] Initializing Polyfill...');
+// WebSim Socket Polyfill -> Reddit Devvit Realtime Bridge
+// This module bridges the WebSim "Room" API to Reddit's Realtime Channels.
+// It uses a postMessage bridge to the parent Devvit Block which handles the actual Realtime connection.
 
-    // 1. Mock Data Structures for Global State
-    // These need to be globally consistent for the polyfill to simulate a room
-    const _roomState = {};
-    const _presence = {};
-    const _peers = {};
-    const _clientId = Math.random().toString(36).substr(2, 9);
-    
-    // Initialize self in peers
-    _peers[_clientId] = { 
-        username: 'Player ' + _clientId.substr(0,4), 
-        avatarUrl: 'https://www.redditstatic.com/avatars/avatar_default_02_FF4500.png',
-        id: _clientId 
-    };
-    _presence[_clientId] = {};
+console.log('[WebSim Socket] Initializing Realtime Bridge...');
 
-    function WebsimSocket() {
-        if (!(this instanceof WebsimSocket)) return new WebsimSocket();
-        
+// Global State (Synced with Room)
+const _roomState = {};
+const _presence = {};
+const _peers = {};
+const _clientId = Math.random().toString(36).substr(2, 9); // Temporary ID until we get real one
+
+// Self Initialization
+_peers[_clientId] = { 
+    username: 'Player ' + _clientId.substr(0,4), 
+    avatarUrl: 'https://www.redditstatic.com/avatars/avatar_default_02_FF4500.png',
+    id: _clientId 
+};
+_presence[_clientId] = {};
+
+class WebsimSocket {
+    constructor() {
         this.clientId = _clientId;
         this.roomState = _roomState;
         this.presence = _presence;
         this.peers = _peers;
         this.listeners = {};
         this.connected = false;
-        
+
         // Listen for messages from Parent (Devvit Host)
         window.addEventListener('message', (e) => {
+            // Filter only our bridge events
             if (!e.data || e.data.type !== 'WEBSIM_SOCKET_EVT') return;
             
             const { type, payload, senderId } = e.data.payload || {};
             
+            // Ignore echoes from self
             if (senderId === this.clientId) return;
 
             this._handleRemoteEvent(type, payload, senderId);
         });
     }
 
-    WebsimSocket.prototype.initialize = async function() {
-        console.log('[WebSim Socket] Connecting...');
+    async initialize() {
+        console.log('[WebSim Socket] Connecting to room...');
         this.connected = true;
         
+        // Announce join to peers
         this._sendInternal('join', { 
             username: this.peers[this.clientId].username,
             avatarUrl: this.peers[this.clientId].avatarUrl
         });
         
-        return new Promise(resolve => setTimeout(resolve, 50));
-    };
+        return Promise.resolve();
+    }
 
-    WebsimSocket.prototype.updatePresence = function(update) {
+    updatePresence(update) {
         const current = this.presence[this.clientId] || {};
         this.presence[this.clientId] = { ...current, ...update };
+        
+        // Optimistic update locally
         this._emit('presence', this.presence);
+        
+        // Broadcast
         this._sendInternal('presence_update', update);
-    };
+    }
 
-    WebsimSocket.prototype.updateRoomState = function(update) {
+    updateRoomState(update) {
         Object.assign(this.roomState, update);
+        
+        // Optimistic update locally
         this._emit('roomState', this.roomState);
+        
+        // Broadcast
         this._sendInternal('room_state_update', update);
-    };
-    
-    WebsimSocket.prototype.requestPresenceUpdate = function(targetClientId, data) {
+    }
+
+    requestPresenceUpdate(targetClientId, data) {
          this._sendInternal('request_presence', { targetClientId, data });
-    };
+    }
 
-    WebsimSocket.prototype.send = function(eventData) {
+    send(eventData) {
         this._sendInternal('broadcast_event', eventData);
-    };
+    }
     
-    WebsimSocket.prototype.emit = function(event, data) {
+    // Legacy support for socket.emit
+    emit(event, data) {
         this.send({ type: event, ...data });
-    };
+    }
     
-    WebsimSocket.prototype.onmessage = function(event) {
-        console.log('[WebSim Socket] Message received:', event);
-    };
+    // Default handler, user can override
+    onmessage(event) {
+        // console.log('[WebSim Socket] Event:', event);
+    }
 
-    WebsimSocket.prototype.subscribePresence = function(callback) {
+    subscribePresence(callback) {
         return this._on('presence', callback);
-    };
+    }
 
-    WebsimSocket.prototype.subscribeRoomState = function(callback) {
+    subscribeRoomState(callback) {
         return this._on('roomState', callback);
-    };
+    }
     
-    WebsimSocket.prototype.subscribePresenceUpdateRequests = function(callback) {
+    subscribePresenceUpdateRequests(callback) {
         return this._on('presence_request', callback);
-    };
+    }
 
-    WebsimSocket.prototype._sendInternal = function(msgType, data) {
+    // INTERNAL: Send to Devvit Parent via postMessage
+    _sendInternal(msgType, data) {
         window.parent.postMessage({
             type: 'WEBSIM_SOCKET_MSG',
             payload: {
@@ -196,9 +208,10 @@ export const websimSocketPolyfill = `
                 senderId: this.clientId
             }
         }, '*');
-    };
+    }
 
-    WebsimSocket.prototype._handleRemoteEvent = function(type, data, senderId) {
+    // INTERNAL: Handle incoming events from Devvit Parent
+    _handleRemoteEvent(type, data, senderId) {
         if (!this.peers[senderId]) {
             this.peers[senderId] = { 
                 id: senderId, 
@@ -210,6 +223,7 @@ export const websimSocketPolyfill = `
         switch(type) {
             case 'join':
                 this.peers[senderId] = { ...this.peers[senderId], ...data };
+                // Reply with our presence so they know about us
                 this._sendInternal('presence_update', this.presence[this.clientId] || {});
                 break;
             case 'presence_update':
@@ -237,35 +251,43 @@ export const websimSocketPolyfill = `
                 }
                 break;
         }
-    };
+    }
 
-    WebsimSocket.prototype._on = function(event, cb) {
+    _on(event, cb) {
         if (!this.listeners[event]) this.listeners[event] = [];
         this.listeners[event].push(cb);
         return () => {
             this.listeners[event] = this.listeners[event].filter(x => x !== cb);
         };
-    };
+    }
 
-    WebsimSocket.prototype._emit = function(event, ...args) {
+    _emit(event, ...args) {
         if (this.listeners[event]) {
             this.listeners[event].forEach(cb => {
                 try { cb(...args); } catch(e) { console.error(e); }
             });
         }
-    };
-
-    // Expose Global
-    window.WebsimSocket = WebsimSocket;
-    
-    // Also polyfill 'party' object if used by older games
-    // Some games use party.room, others use party as the socket itself.
-    if (!window.party) {
-        window.party = new WebsimSocket();
-        // Alias for games that expect party.room to be the socket
-        window.party.room = window.party;
     }
-})();
+}
+
+// Singleton Instance
+const socket = new WebsimSocket();
+
+// Expose Global (WebSim Standard)
+window.WebsimSocket = WebsimSocket;
+
+// Expose 'room' instance globally if not present
+// Many WebSim apps use 'const room = new WebsimSocket()' but since we're polyfilling,
+// we often need to hook into existing code. 
+// For this environment, we just ensure the class is available.
+
+// PartyKit / Multiplayer Polyfills for other common libraries
+if (!window.party) {
+    window.party = socket;
+    window.party.room = socket; // Alias
+}
+
+export default socket;
 `;
 
 export const websimStubsJs = `
