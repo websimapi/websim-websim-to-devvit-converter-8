@@ -5,9 +5,16 @@ export const simpleLoggerJs = `
   const _warn = console.warn;
   const _error = console.error;
   const _info = console.info;
-  
+
   function post(level, args) {
     try {
+      // Filter out noisy/irrelevant logs
+      const msgPreview = args.map(String).join(' ');
+      if (msgPreview.includes('AudioContext was prevented') || 
+          msgPreview.includes('acknowledgeRemotionLicense')) {
+          return;
+      }
+
       // Robust serialization to string for Devvit consumption
       const serialized = args.map(a => {
         if (a === undefined) return 'undefined';
@@ -77,7 +84,7 @@ export const simpleLoggerJs = `
           };
     
           // Listen for any interaction to unlock audio
-          ['click', 'touchstart', 'pointerdown', 'keydown', 'mousedown'].forEach(evt => 
+          ['click', 'touchstart', 'touchend', 'pointerdown', 'pointerup', 'keydown', 'mousedown'].forEach(evt => 
               window.addEventListener(evt, resumeAll, { once: true, capture: true })
           );
       }

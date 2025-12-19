@@ -206,14 +206,22 @@ export class AssetAnalyzer {
         }
 
         // Remotion License Injection for <Player /> components
-        if (code.includes('<Player') && !code.includes('acknowledgeRemotionLicense')) {
-             // Match <Player followed by whitespace, newline, slash (self-close), or closing bracket
+        // We iterate all <Player> tags and ensure the prop is present.
+        if (code.includes('<Player')) {
              const playerRegex = /<Player([\s\n\r/>])/g;
              let match;
              while ((match = playerRegex.exec(code)) !== null) {
-                 // Insert prop right after <Player
-                 magic.appendLeft(match.index + 7, ' acknowledgeRemotionLicense={true}');
-                 hasChanges = true;
+                 // Check if the prop already exists in the vicinity (heuristic: next 500 chars)
+                 // This avoids duplicate injection if the user already added it or if we run multiple times
+                 const vicinity = code.slice(match.index, match.index + 500);
+                 const closeIndex = vicinity.indexOf('>');
+                 const tagContent = closeIndex > -1 ? vicinity.slice(0, closeIndex) : vicinity;
+                 
+                 if (!tagContent.includes('acknowledgeRemotionLicense')) {
+                     // Insert prop right after <Player
+                     magic.appendLeft(match.index + 7, ' acknowledgeRemotionLicense={true}');
+                     hasChanges = true;
+                 }
              }
         }
 
