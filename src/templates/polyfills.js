@@ -77,7 +77,7 @@ export const simpleLoggerJs = `
           };
     
           // Listen for any interaction to unlock audio
-          ['click', 'touchstart', 'keydown', 'mousedown'].forEach(evt => 
+          ['click', 'touchstart', 'pointerdown', 'keydown', 'mousedown'].forEach(evt => 
               window.addEventListener(evt, resumeAll, { once: true, capture: true })
           );
       }

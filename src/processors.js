@@ -207,10 +207,12 @@ export class AssetAnalyzer {
 
         // Remotion License Injection for <Player /> components
         if (code.includes('<Player') && !code.includes('acknowledgeRemotionLicense')) {
-             const playerRegex = /<Player(\s+)/g;
+             // Match <Player followed by whitespace, newline, slash (self-close), or closing bracket
+             const playerRegex = /<Player([\s\n\r/>])/g;
              let match;
              while ((match = playerRegex.exec(code)) !== null) {
-                 magic.appendRight(match.index + match[0].length, 'acknowledgeRemotionLicense={true} ');
+                 // Insert prop right after <Player
+                 magic.appendLeft(match.index + 7, ' acknowledgeRemotionLicense={true}');
                  hasChanges = true;
              }
         }

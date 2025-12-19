@@ -123,14 +123,16 @@ async function checkRemotion() {
             console.log('   Please select your usage type for licensing:');
             console.log('   1) Individual / Small Team (1-3 people) - Free/Indie');
             console.log('   2) Company / Large Team (4+ people) - Commercial License');
-            const ans = await ask('   Select (1/2) > ');
+            const ans = await ask('   Select (1/2) [default: 1] > ');
             if (ans.trim() === '2') {
                 const key = await ask('   Enter your Remotion License Key > ');
                 if (key.trim()) {
                     fs.appendFileSync('.env', \`\\nREMOTION_LICENSE=\${key.trim()}\\n\`);
                     console.log('   ✅ License key saved to .env');
                 } else console.warn('   ⚠️  No key entered. You may need to configure REMOTION_LICENSE later.');
-            } else console.log('   ✅ Configuring for Indie/Free usage.');
+            } else {
+                console.log('   ✅ Configuring for Indie/Free usage (Prop injected automatically).');
+            }
             console.log('');
         }
     } catch(e) {}
