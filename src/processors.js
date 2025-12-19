@@ -26,12 +26,12 @@ export class AssetAnalyzer {
 
         // 1. Remotion Handling
         if (source.includes('@websim/remotion')) {
-            const isPlayer = source.includes('/player');
             this.dependencies['remotion'] = '^4.0.0';
             this.dependencies['@remotion/player'] = '^4.0.0';
             this.dependencies['react'] = '^18.2.0';
             this.dependencies['react-dom'] = '^18.2.0';
-            return isPlayer ? '@remotion/player' : 'remotion';
+            // Route via bridge to handle mixed exports (Player + hooks)
+            return '/remotion_bridge';
         }
 
         // 2. Three.js Handling
@@ -70,7 +70,8 @@ export class AssetAnalyzer {
         if (source.includes('react')) {
              if (source.includes('jsx-dev-runtime')) {
                  this.dependencies['react'] = '^18.2.0';
-                 return 'react/jsx-dev-runtime';
+                 // Force standard react import to let Vite handle runtime selection in Production
+                 return 'react';
              }
              if (source.includes('jsx-runtime')) {
                  this.dependencies['react'] = '^18.2.0';

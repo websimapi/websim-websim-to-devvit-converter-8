@@ -118,6 +118,14 @@ export async function generateDevvitZip(projectMeta, assets, includeReadme = tru
     clientFolder.file("websim_socket.js", websimSocketPolyfill);
     clientFolder.file("websim_stubs.js", websimStubsJs);
 
+    // Add Remotion Bridge if needed
+    if (hasRemotion) {
+        clientFolder.file("remotion_bridge.js", `
+export * from 'remotion';
+export { Player } from '@remotion/player';
+        `.trim());
+    }
+
     // 4. Source Code (Devvit Main.tsx)
     zip.file("src/main.tsx", getMainTsx(projectTitle, indexPath));
 

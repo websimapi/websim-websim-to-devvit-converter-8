@@ -41,7 +41,15 @@ export default defineConfig({
   root: 'client',
   base: './',
   plugins: [
-    ${hasReact ? 'react(),' : ''}
+    ${hasReact ? `react({
+      jsxRuntime: 'automatic',
+      include: "**/*.{jsx,tsx,js,ts}",
+      babel: {
+        babelrc: false,
+        configFile: false,
+        plugins: []
+      }
+    }),` : ''}
   ],
   assetsInclude: ['**/*.mp3', '**/*.wav', '**/*.ogg', '**/*.glb', '**/*.gltf', '**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif'],
   build: {
