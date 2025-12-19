@@ -5,7 +5,7 @@ export const generatePackageJson = (slug, dependencies = {}, devDependencies = {
   "type": "module",
   "scripts": {
     "dev": "devvit playtest",
-    "build:client": "vite build",
+    "build:client": "NODE_ENV=production vite build",
     "setup": "node scripts/setup.js", 
     "register": "devvit upload",
     "upload": "devvit upload",
@@ -42,13 +42,13 @@ export default defineConfig({
   base: './',
   ${hasReact ? `plugins: [
     react({
-      jsxRuntime: "automatic",
+      jsxRuntime: 'automatic',
       include: "**/*.{jsx,tsx,js,ts}",
     }),
   ],` : ""}
   assetsInclude: ['**/*.mp3', '**/*.wav', '**/*.ogg', '**/*.glb', '**/*.gltf', '**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif'],
   ${hasReact ? `optimizeDeps: {
-    include: [${hasRemotion ? '"remotion", ' : ''}"react", "react-dom"],
+    include: [${hasRemotion ? '"remotion", "@remotion/player", ' : ''}"react", "react-dom"],
   },` : ""}
   build: {
     outDir: '../webroot',
@@ -63,7 +63,7 @@ export default defineConfig({
     },
   },
   define: {
-    'process.env.NODE_ENV': '"production"',
+    "process.env.NODE_ENV": JSON.stringify("production"),
   }
 });
 `;
